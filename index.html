@@ -93,7 +93,9 @@
       display: grid;
       justify-items: center;
       gap: 22px;
-      margin-bottom: 10vh;
+      /* raise the block by half the logo stack so the loadstring box,
+         not the block as a whole, lands on the vertical centre */
+      margin-bottom: calc((clamp(140px, 26vw, 200px) - 18px) / 2);
       text-align: center;
     }
 
@@ -114,7 +116,7 @@
       height: clamp(140px, 26vw, 200px);
       object-fit: contain;
       opacity: 0.72;
-      transform: translateY(18px);
+      transform: translateY(34px);
       filter: drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.28));
       transition: opacity 0.25s ease;
     }
