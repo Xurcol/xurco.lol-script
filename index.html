@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Xurco</title>
+  <link rel="icon" type="image/png" href="images/favicon.ico">
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="apple-touch-icon" href="images/qwdqfgqdf.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #080808;
+      --panel: rgba(16, 16, 16, 0.72);
+      --border: rgba(255, 255, 255, 0.09);
+      --text: #f4f4f4;
+      --muted: rgba(244, 244, 244, 0.56);
+      --accent: #123a74;
+      --accent-rgb: 18, 58, 116;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Geist, system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding: 24px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: -20%;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(var(--accent-rgb), 0.18), transparent 24%),
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.08), transparent 22%),
+        radial-gradient(circle at 82% 84%, rgba(255, 255, 255, 0.055), transparent 24%),
+        #080808;
+      filter: saturate(1.05);
+      animation: bgDrift 14s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
+      opacity: 0.34;
+      mix-blend-mode: screen;
+    }
+
+    @keyframes bgDrift {
+      from { transform: translate3d(-1.5%, -1%, 0) scale(1); }
+      to { transform: translate3d(1.5%, 1%, 0) scale(1.04); }
+    }
+
+    main {
+      position: relative;
+      z-index: 2;
+      width: min(720px, calc(100vw - 32px));
+      display: grid;
+      justify-items: center;
+      gap: 22px;
+      text-align: center;
+    }
+
+    .bg-video {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.34;
+      filter: saturate(0.9) contrast(1.08) brightness(0.72);
+      pointer-events: none;
+    }
+
+    .logo {
+      width: 112px;
+      height: 112px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.28));
+    }
+
+    .loadstring {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
+        var(--panel);
+      box-shadow:
+        0 24px 70px rgba(0, 0, 0, 0.42),
+        0 0 44px rgba(var(--accent-rgb), 0.12);
+      color: var(--text);
+      cursor: pointer;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: clamp(11px, 2.6vw, 15px);
+      line-height: 1.8;
+      padding: 18px 20px;
+      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      word-break: break-word;
+    }
+
+    .loadstring:hover {
+      border-color: rgba(var(--accent-rgb), 0.36);
+      box-shadow:
+        0 28px 82px rgba(0, 0, 0, 0.5),
+        0 0 58px rgba(var(--accent-rgb), 0.18);
+      transform: translateY(-2px);
+    }
+
+    .loadstring.is-copied {
+      border-color: rgba(var(--accent-rgb), 0.7);
+    }
+
+    .call { color: #3e67a4; }
+    .obj,
+    .method { color: #5f87c0; }
+    .str,
+    .url { color: #ffffff; }
+    .punct,
+    .sym { color: rgba(255, 255, 255, 0.4); }
+
+    .hint {
+      min-height: 18px;
+      color: var(--muted);
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <!-- Change this src to your own MP4. The background and audio both come from this one video. -->
+  <video id="backgroundVideo" class="bg-video" src="media/obyxw6.mp4" autoplay muted loop playsinline preload="auto"></video>
+
+  <main>
+    <img class="logo" src="images/qwdqfgqdf.png" alt="Xurco">
+
+    <button class="loadstring" id="copyButton" type="button" aria-label="Copy loadstring">
+      <span class="call">loadstring</span><span class="punct">(</span><span class="obj">game</span><span class="sym">:</span><span class="method">HttpGet</span><span class="punct">(</span><span class="str">"</span><span class="url">https://xurco.xyz/loader</span><span class="str">"</span><span class="punct">))()</span>
+    </button>
+
+    <div class="hint" id="statusText">click anywhere to unmute video</div>
+  </main>
+
+  <script>
+    const backgroundVideo = document.getElementById("backgroundVideo");
+    const copyButton = document.getElementById("copyButton");
+    const statusText = document.getElementById("statusText");
+    const loadstring = 'loadstring(game:HttpGet("https://xurco.xyz/loader"))()';
+
+    function setStatus(text) {
+      statusText.textContent = text;
+    }
+
+    function playVideoMuted() {
+      backgroundVideo.muted = true;
+      backgroundVideo.volume = 0;
+      backgroundVideo.play().catch(() => {});
+    }
+
+    function unmuteVideo() {
+      backgroundVideo.volume = 0.45;
+      backgroundVideo.muted = false;
+      backgroundVideo.play()
+        .then(() => setStatus("video audio playing on repeat"))
+        .catch(() => setStatus("click anywhere to unmute video"));
+    }
+
+    copyButton.addEventListener("click", () => {
+      navigator.clipboard.writeText(loadstring).catch(() => {});
+      copyButton.classList.add("is-copied");
+      setStatus("copied");
+      window.setTimeout(() => {
+        copyButton.classList.remove("is-copied");
+        if (!backgroundVideo.paused && !backgroundVideo.muted) setStatus("video audio playing on repeat");
+      }, 1300);
+    });
+
+    document.addEventListener("click", unmuteVideo, { once: true });
+    playVideoMuted();
+  </script>
+</body>
+</html>
