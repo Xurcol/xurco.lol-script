@@ -199,10 +199,7 @@
       statusText.textContent = text;
     }
 
-    const AUDIO_START_TIME = 3;  // audio kicks in at the 0:03 mark
     const TARGET_VOLUME = 0.45;
-
-    let audioDelayTimer = null;
 
     function playVideoMuted() {
       backgroundVideo.muted = true;
@@ -210,27 +207,11 @@
       backgroundVideo.play().catch(() => {});
     }
 
-    // hold silence until the 0:03 mark, then come in at full volume
-    function scheduleAudio() {
-      window.clearTimeout(audioDelayTimer);
-
-      const remaining = AUDIO_START_TIME - backgroundVideo.currentTime;
-
-      if (remaining <= 0) {
-        backgroundVideo.volume = TARGET_VOLUME;
-      } else {
-        audioDelayTimer = window.setTimeout(() => {
-          backgroundVideo.volume = TARGET_VOLUME;
-        }, remaining * 1000);
-      }
-    }
-
     function unmuteVideo() {
-      backgroundVideo.volume = 0;
+      backgroundVideo.volume = TARGET_VOLUME;
       backgroundVideo.muted = false;
       backgroundVideo.play()
         .then(() => {
-          scheduleAudio();
           setStatus("video audio playing on repeat");
           document.removeEventListener("click", unmuteVideo);
         })
