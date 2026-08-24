@@ -175,7 +175,7 @@
 </head>
 <body>
   <!-- Change this src to your own MP4. The background and audio both come from this one video. -->
-  <video id="backgroundVideo" class="bg-video" src="media/jumbotron.mp4" autoplay muted playsinline preload="auto"></video>
+  <video id="backgroundVideo" class="bg-video" src="media/jumbotron.mp4" autoplay muted loop playsinline preload="auto"></video>
 
   <main>
     <img class="logo" src="images/qwdqfgqdf.png" alt="Xurco">
@@ -197,33 +197,12 @@
       statusText.textContent = text;
     }
 
-    const START_TIME = 70;      // 1:10
+    const FADE_START_TIME = 3;  // begin the fade at the 0:03 mark
     const TARGET_VOLUME = 0.45;
     const FADE_MS = 2500;
 
     let fadeTimer = null;
-
-    function seekToStart() {
-      try {
-        if (backgroundVideo.duration > START_TIME) {
-          backgroundVideo.currentTime = START_TIME;
-        }
-      } catch (err) {
-        /* seeking not ready yet */
-      }
-    }
-
-    // loop back to 1:10 instead of 0:00 (native `loop` would restart at zero)
-    backgroundVideo.addEventListener("ended", () => {
-      seekToStart();
-      backgroundVideo.play().catch(() => {});
-    });
-
-    if (backgroundVideo.readyState >= 1) {
-      seekToStart();
-    } else {
-      backgroundVideo.addEventListener("loadedmetadata", seekToStart, { once: true });
-    }
+    let fadeDelayTimer = null;
 
     function fadeInVolume() {
       window.clearInterval(fadeTimer);
@@ -248,12 +227,25 @@
       backgroundVideo.play().catch(() => {});
     }
 
+    // hold silence until the 0:03 mark, then fade up
+    function scheduleFadeIn() {
+      window.clearTimeout(fadeDelayTimer);
+
+      const remaining = FADE_START_TIME - backgroundVideo.currentTime;
+
+      if (remaining <= 0) {
+        fadeInVolume();
+      } else {
+        fadeDelayTimer = window.setTimeout(fadeInVolume, remaining * 1000);
+      }
+    }
+
     function unmuteVideo() {
       backgroundVideo.volume = 0;
       backgroundVideo.muted = false;
       backgroundVideo.play()
         .then(() => {
-          fadeInVolume();
+          scheduleFadeIn();
           setStatus("video audio playing on repeat");
           document.removeEventListener("click", unmuteVideo);
         })
