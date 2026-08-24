@@ -4,11 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Xurco</title>
-  <link rel="icon" type="image/png" href="images/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="shortcut icon" href="images/favicon.ico">
   <link rel="apple-touch-icon" href="images/qwdqfgqdf.png">
+
+  <meta name="description" content="Xurco">
+  <meta property="og:title" content="Xurco">
+  <meta property="og:description" content="loadstring(game:HttpGet(&quot;https://xurco.xyz/loader&quot;))()">
+  <meta property="og:image" content="images/qwdqfgqdf.png">
+  <meta name="theme-color" content="#123a74">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Geist:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script src="js/disable_inspect.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -20,14 +31,17 @@
       --bg: #080808;
       --panel: rgba(16, 16, 16, 0.72);
       --border: rgba(255, 255, 255, 0.09);
-      --text: #f4f4f4;
-      --muted: rgba(244, 244, 244, 0.56);
-      --accent: #123a74;
-      --accent-rgb: 18, 58, 116;
+      --text: #f3e7d3;
+      --muted: rgba(243, 231, 211, 0.56);
+      --accent: #c98b3f;
+      --accent-rgb: 201, 139, 63;
     }
 
     html,
     body {
+      -webkit-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
       width: 100%;
       height: 100%;
       background: var(--bg);
@@ -79,6 +93,7 @@
       display: grid;
       justify-items: center;
       gap: 22px;
+      margin-bottom: 10vh;
       text-align: center;
     }
 
@@ -95,10 +110,17 @@
     }
 
     .logo {
-      width: 112px;
-      height: 112px;
+      width: clamp(140px, 26vw, 200px);
+      height: clamp(140px, 26vw, 200px);
       object-fit: contain;
+      opacity: 0.72;
+      transform: translateY(18px);
       filter: drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.28));
+      transition: opacity 0.25s ease;
+    }
+
+    .logo:hover {
+      opacity: 1;
     }
 
     .loadstring {
@@ -133,13 +155,13 @@
       border-color: rgba(var(--accent-rgb), 0.7);
     }
 
-    .call { color: #3e67a4; }
+    .call { color: #e8b563; }
     .obj,
-    .method { color: #5f87c0; }
+    .method { color: #c98b3f; }
     .str,
-    .url { color: #ffffff; }
+    .url { color: #f7ecdb; }
     .punct,
-    .sym { color: rgba(255, 255, 255, 0.4); }
+    .sym { color: rgba(247, 236, 219, 0.42); }
 
     .hint {
       min-height: 18px;
@@ -153,7 +175,7 @@
 </head>
 <body>
   <!-- Change this src to your own MP4. The background and audio both come from this one video. -->
-  <video id="backgroundVideo" class="bg-video" src="media/obyxw6.mp4" autoplay muted loop playsinline preload="auto"></video>
+  <video id="backgroundVideo" class="bg-video" src="media/obyxw6.mp4" autoplay muted playsinline preload="auto"></video>
 
   <main>
     <img class="logo" src="images/qwdqfgqdf.png" alt="Xurco">
@@ -175,6 +197,51 @@
       statusText.textContent = text;
     }
 
+    const START_TIME = 70;      // 1:10
+    const TARGET_VOLUME = 0.45;
+    const FADE_MS = 2500;
+
+    let fadeTimer = null;
+
+    function seekToStart() {
+      try {
+        if (backgroundVideo.duration > START_TIME) {
+          backgroundVideo.currentTime = START_TIME;
+        }
+      } catch (err) {
+        /* seeking not ready yet */
+      }
+    }
+
+    // loop back to 1:10 instead of 0:00 (native `loop` would restart at zero)
+    backgroundVideo.addEventListener("ended", () => {
+      seekToStart();
+      backgroundVideo.play().catch(() => {});
+    });
+
+    if (backgroundVideo.readyState >= 1) {
+      seekToStart();
+    } else {
+      backgroundVideo.addEventListener("loadedmetadata", seekToStart, { once: true });
+    }
+
+    function fadeInVolume() {
+      window.clearInterval(fadeTimer);
+
+      const stepMs = 50;
+      const steps = Math.round(FADE_MS / stepMs);
+      let step = 0;
+
+      backgroundVideo.volume = 0;
+
+      fadeTimer = window.setInterval(() => {
+        step += 1;
+        const eased = Math.min(step / steps, 1);
+        backgroundVideo.volume = TARGET_VOLUME * eased * eased;
+        if (eased === 1) window.clearInterval(fadeTimer);
+      }, stepMs);
+    }
+
     function playVideoMuted() {
       backgroundVideo.muted = true;
       backgroundVideo.volume = 0;
@@ -182,24 +249,89 @@
     }
 
     function unmuteVideo() {
-      backgroundVideo.volume = 0.45;
+      backgroundVideo.volume = 0;
       backgroundVideo.muted = false;
       backgroundVideo.play()
-        .then(() => setStatus("video audio playing on repeat"))
-        .catch(() => setStatus("click anywhere to unmute video"));
+        .then(() => {
+          fadeInVolume();
+          setStatus("video audio playing on repeat");
+          document.removeEventListener("click", unmuteVideo);
+        })
+        .catch(() => {
+          backgroundVideo.muted = true;
+          setStatus("click anywhere to unmute video");
+        });
     }
 
-    copyButton.addEventListener("click", () => {
-      navigator.clipboard.writeText(loadstring).catch(() => {});
-      copyButton.classList.add("is-copied");
-      setStatus("copied");
+    async function copyLoadstring() {
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(loadstring);
+          return true;
+        }
+        const area = document.createElement("textarea");
+        area.value = loadstring;
+        area.style.position = "fixed";
+        area.style.opacity = "0";
+        document.body.appendChild(area);
+        area.select();
+        const ok = document.execCommand("copy");
+        document.body.removeChild(area);
+        return ok;
+      } catch (err) {
+        return false;
+      }
+    }
+
+    function idleStatus() {
+      return (!backgroundVideo.paused && !backgroundVideo.muted)
+        ? "video audio playing on repeat"
+        : "click anywhere to unmute video";
+    }
+
+    copyButton.addEventListener("click", async () => {
+      const copied = await copyLoadstring();
+      if (copied) copyButton.classList.add("is-copied");
+      setStatus(copied ? "copied" : "copy failed");
       window.setTimeout(() => {
         copyButton.classList.remove("is-copied");
-        if (!backgroundVideo.paused && !backgroundVideo.muted) setStatus("video audio playing on repeat");
+        setStatus(idleStatus());
       }, 1300);
     });
 
-    document.addEventListener("click", unmuteVideo, { once: true });
+    // typing animation in the browser tab title
+    (function animateTitle() {
+      const text = "xurco.xyz";
+      const typeSpeed = 300;
+      const eraseSpeed = 170;
+      const holdFull = 1400;
+      const holdEmpty = 500;
+
+      let count = 0;
+      let typing = true;
+
+      function tick() {
+        document.title = text.slice(0, count) || " ";
+
+        let delay = typing ? typeSpeed : eraseSpeed;
+
+        if (typing && count === text.length) {
+          typing = false;
+          delay = holdFull;
+        } else if (!typing && count === 0) {
+          typing = true;
+          delay = holdEmpty;
+        } else {
+          count += typing ? 1 : -1;
+        }
+
+        window.setTimeout(tick, delay);
+      }
+
+      tick();
+    })();
+
+    document.addEventListener("click", unmuteVideo);
     playVideoMuted();
   </script>
 </body>
