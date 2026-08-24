@@ -199,29 +199,10 @@
       statusText.textContent = text;
     }
 
-    const FADE_START_TIME = 3;  // begin the fade at the 0:03 mark
+    const AUDIO_START_TIME = 3;  // audio kicks in at the 0:03 mark
     const TARGET_VOLUME = 0.45;
-    const FADE_MS = 2500;
 
-    let fadeTimer = null;
-    let fadeDelayTimer = null;
-
-    function fadeInVolume() {
-      window.clearInterval(fadeTimer);
-
-      const stepMs = 50;
-      const steps = Math.round(FADE_MS / stepMs);
-      let step = 0;
-
-      backgroundVideo.volume = 0;
-
-      fadeTimer = window.setInterval(() => {
-        step += 1;
-        const eased = Math.min(step / steps, 1);
-        backgroundVideo.volume = TARGET_VOLUME * eased * eased;
-        if (eased === 1) window.clearInterval(fadeTimer);
-      }, stepMs);
-    }
+    let audioDelayTimer = null;
 
     function playVideoMuted() {
       backgroundVideo.muted = true;
@@ -229,16 +210,18 @@
       backgroundVideo.play().catch(() => {});
     }
 
-    // hold silence until the 0:03 mark, then fade up
-    function scheduleFadeIn() {
-      window.clearTimeout(fadeDelayTimer);
+    // hold silence until the 0:03 mark, then come in at full volume
+    function scheduleAudio() {
+      window.clearTimeout(audioDelayTimer);
 
-      const remaining = FADE_START_TIME - backgroundVideo.currentTime;
+      const remaining = AUDIO_START_TIME - backgroundVideo.currentTime;
 
       if (remaining <= 0) {
-        fadeInVolume();
+        backgroundVideo.volume = TARGET_VOLUME;
       } else {
-        fadeDelayTimer = window.setTimeout(fadeInVolume, remaining * 1000);
+        audioDelayTimer = window.setTimeout(() => {
+          backgroundVideo.volume = TARGET_VOLUME;
+        }, remaining * 1000);
       }
     }
 
@@ -247,7 +230,7 @@
       backgroundVideo.muted = false;
       backgroundVideo.play()
         .then(() => {
-          scheduleFadeIn();
+          scheduleAudio();
           setStatus("video audio playing on repeat");
           document.removeEventListener("click", unmuteVideo);
         })
