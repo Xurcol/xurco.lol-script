@@ -12,7 +12,7 @@
   <meta property="og:title" content="Priv Script">
   <meta property="og:description" content="loadstring(game:HttpGet(&quot;https://xurco.xyz/loader&quot;))()">
   <meta property="og:image" content="https://xurco.xyz/images/qwdqfgqdf.png">
-  <meta name="theme-color" content="#8d8f96">
+  <meta name="theme-color" content="#9b8ac4">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,13 +28,15 @@
     }
 
     :root {
-      --bg: #080808;
-      --panel: rgba(16, 16, 16, 0.72);
-      --border: rgba(255, 255, 255, 0.09);
-      --text: #e9e9ec;
-      --muted: rgba(233, 233, 236, 0.56);
-      --accent: #8d8f96;
-      --accent-rgb: 141, 143, 150;
+      --bg: #171320;
+      --panel: rgba(38, 31, 52, 0.72);
+      --border: rgba(255, 255, 255, 0.11);
+      --text: #e9e4f3;
+      --muted: rgba(233, 228, 243, 0.58);
+      --accent: #9b8ac4;
+      --accent-rgb: 155, 138, 196;
+      /* 0..1, driven from the audio analyser each frame */
+      --level: 0;
     }
 
     html,
@@ -63,10 +65,12 @@
       position: fixed;
       inset: -20%;
       background:
-        radial-gradient(circle at 50% 42%, rgba(var(--accent-rgb), 0.18), transparent 24%),
-        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.08), transparent 22%),
-        radial-gradient(circle at 82% 84%, rgba(255, 255, 255, 0.055), transparent 24%),
-        #080808;
+        radial-gradient(circle at 50% 42%,
+          rgba(var(--accent-rgb), calc(0.22 + var(--level) * 0.3)),
+          transparent calc(24% + var(--level) * 10%)),
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.09), transparent 22%),
+        radial-gradient(circle at 82% 84%, rgba(255, 255, 255, 0.065), transparent 24%),
+        var(--bg);
       filter: saturate(1.05);
       animation: bgDrift 14s ease-in-out infinite alternate;
     }
@@ -97,6 +101,23 @@
          not the block as a whole, lands on the vertical centre */
       margin-bottom: calc((clamp(140px, 26vw, 200px) - 18px) / 2);
       text-align: center;
+      animation: riseIn 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+    }
+
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      main { animation: none; }
+      body::before { animation: none; }
     }
 
     .bg-video {
@@ -106,8 +127,8 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      opacity: 0.34;
-      filter: saturate(0.9) contrast(1.08) brightness(0.72);
+      opacity: 0.46;
+      filter: saturate(1.05) contrast(1.02) brightness(0.9);
       pointer-events: none;
     }
 
@@ -116,8 +137,11 @@
       height: clamp(140px, 26vw, 200px);
       object-fit: contain;
       opacity: 0.72;
-      transform: translateY(34px);
-      filter: drop-shadow(0 0 26px rgba(var(--accent-rgb), 0.28));
+      transform: translateY(52px);
+      filter: drop-shadow(
+        0 0 calc(20px + var(--level) * 40px)
+        rgba(var(--accent-rgb), calc(0.24 + var(--level) * 0.5))
+      );
       transition: opacity 0.25s ease;
     }
 
@@ -125,45 +149,96 @@
       opacity: 1;
     }
 
-    .loadstring {
+    .bar-row {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
       width: 100%;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.018)),
-        var(--panel);
-      box-shadow:
-        0 24px 70px rgba(0, 0, 0, 0.42),
-        0 0 44px rgba(var(--accent-rgb), 0.12);
+    }
+
+    .discord {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      transition: transform 0.18s ease;
+    }
+
+    .discord img {
+      width: 76px;
+      height: 76px;
+      object-fit: contain;
+      opacity: 0.82;
+      transform: rotate(0deg);
+      transition: opacity 0.18s ease, transform 0.65s cubic-bezier(0.3, 0, 0.2, 1);
+    }
+
+    .discord:hover {
+      transform: translateY(-2px);
+    }
+
+    .discord:hover img {
+      opacity: 1;
+      /* two full turns out, and it unwinds the same way on mouse-out */
+      transform: rotate(720deg);
+    }
+
+    .loadstring {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 999px;
+      background: rgba(14, 12, 19, 0.82);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
       color: var(--text);
       cursor: pointer;
       font-family: "JetBrains Mono", Consolas, monospace;
       font-size: clamp(11px, 2.6vw, 15px);
-      line-height: 1.8;
-      padding: 18px 20px;
-      transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+      line-height: 1.7;
+      padding: 16px 26px;
+      transition: border-color 0.18s ease, background 0.18s ease;
       word-break: break-word;
     }
 
+    .loadstring .code {
+      min-width: 0;
+    }
+
+    .copy-icon {
+      flex: 0 0 auto;
+      width: 18px;
+      height: 18px;
+      opacity: 0.45;
+      transition: opacity 0.18s ease;
+    }
+
     .loadstring:hover {
-      border-color: rgba(var(--accent-rgb), 0.36);
-      box-shadow:
-        0 28px 82px rgba(0, 0, 0, 0.5),
-        0 0 58px rgba(var(--accent-rgb), 0.18);
-      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(20, 17, 27, 0.88);
+    }
+
+    .loadstring:hover .copy-icon {
+      opacity: 0.85;
     }
 
     .loadstring.is-copied {
-      border-color: rgba(var(--accent-rgb), 0.7);
+      border-color: rgba(var(--accent-rgb), 0.6);
     }
 
-    .call { color: #d5d7dd; }
+    .loadstring.is-copied .copy-icon {
+      opacity: 1;
+    }
+
+    .call { color: #c3b3e6; }
     .obj,
-    .method { color: #9a9ca4; }
+    .method { color: #9b8ac4; }
     .str,
-    .url { color: #f4f5f7; }
+    .url { color: #f3effb; }
     .punct,
-    .sym { color: rgba(244, 245, 247, 0.42); }
+    .sym { color: rgba(243, 239, 251, 0.44); }
 
     .hint {
       min-height: 18px;
@@ -176,21 +251,35 @@
   </style>
 </head>
 <body>
-  <!-- Change this src to your own MP4. The background and audio both come from this one video. -->
-  <video id="backgroundVideo" class="bg-video" src="media/jumbotron.mp4" autoplay muted loop playsinline preload="auto"></video>
+  <!-- Silent ping-pong clip (plays forward, then reversed) so the loop has no visible cut. -->
+  <video id="backgroundVideo" class="bg-video" src="media/loop.mp4" autoplay muted loop playsinline preload="auto"></video>
+
+  <!-- Audio is a separate forward-only track, so it never plays reversed. -->
+  <audio id="backgroundAudio" src="media/audio.m4a" loop preload="auto"></audio>
 
   <main>
     <img class="logo" src="images/qwdqfgqdf.png" alt="Xurco">
 
-    <button class="loadstring" id="copyButton" type="button" aria-label="Copy loadstring">
-      <span class="call">loadstring</span><span class="punct">(</span><span class="obj">game</span><span class="sym">:</span><span class="method">HttpGet</span><span class="punct">(</span><span class="str">"</span><span class="url">https://xurco.xyz/loader</span><span class="str">"</span><span class="punct">))()</span>
-    </button>
+    <div class="bar-row">
+      <button class="loadstring" id="copyButton" type="button" aria-label="Copy loadstring">
+        <span class="code"><span class="call">loadstring</span><span class="punct">(</span><span class="obj">game</span><span class="sym">:</span><span class="method">HttpGet</span><span class="punct">(</span><span class="str">"</span><span class="url">https://xurco.xyz/loader</span><span class="str">"</span><span class="punct">))()</span></span>
+        <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="12" height="12" rx="2.5"></rect>
+          <path d="M6 15H4.5A1.5 1.5 0 0 1 3 13.5v-9A1.5 1.5 0 0 1 4.5 3h9A1.5 1.5 0 0 1 15 4.5V6"></path>
+        </svg>
+      </button>
 
-    <div class="hint" id="statusText">click anywhere to unmute video</div>
+      <a class="discord" href="https://discord.gg/HEXR7Wshy3" target="_blank" rel="noopener noreferrer" aria-label="Join the Discord">
+        <img src="images/discord.png" alt="Discord">
+      </a>
+    </div>
+
+    <div class="hint" id="statusText">click anywhere to unmute audio</div>
   </main>
 
   <script>
     const backgroundVideo = document.getElementById("backgroundVideo");
+    const backgroundAudio = document.getElementById("backgroundAudio");
     const copyButton = document.getElementById("copyButton");
     const statusText = document.getElementById("statusText");
     const loadstring = 'loadstring(game:HttpGet("https://xurco.xyz/loader"))()';
@@ -201,6 +290,64 @@
 
     const TARGET_VOLUME = 0.45;
 
+    // ---- audio-reactive glow -------------------------------------------
+    // The analyser can only be built after a user gesture, and a media
+    // element can only ever be routed through one source node.
+    let analyser = null;
+    let levelData = null;
+    let smoothed = 0;
+
+    function startAnalyser() {
+      if (analyser) return;
+
+      // Over file://, media counts as cross-origin: routing the element
+      // through a MediaElementSource makes it emit silence. Skip the
+      // analyser there and keep the audio audible.
+      if (location.protocol === "file:") return;
+
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+
+      try {
+        const ctx = new Ctx();
+        const source = ctx.createMediaElementSource(backgroundAudio);
+
+        analyser = ctx.createAnalyser();
+        analyser.fftSize = 256;
+        analyser.smoothingTimeConstant = 0.8;
+
+        // must reach the destination, or routing through the graph mutes it
+        source.connect(analyser);
+        analyser.connect(ctx.destination);
+
+        levelData = new Uint8Array(analyser.frequencyBinCount);
+        ctx.resume();
+        requestAnimationFrame(tickGlow);
+      } catch (err) {
+        analyser = null;  // fall back to the static glow
+      }
+    }
+
+    function tickGlow() {
+      if (!analyser) return;
+
+      analyser.getByteFrequencyData(levelData);
+
+      // weight the low end, where the beat lives
+      const bins = Math.max(1, Math.floor(levelData.length / 8));
+      let sum = 0;
+      for (let i = 0; i < bins; i += 1) sum += levelData[i];
+
+      const level = sum / bins / 255;
+
+      // ease toward the new value so the glow swells instead of flickering
+      smoothed += (level - smoothed) * 0.18;
+
+      document.documentElement.style.setProperty("--level", smoothed.toFixed(3));
+      requestAnimationFrame(tickGlow);
+    }
+
+    // the clip itself has no audio track; it stays muted so it can autoplay
     function playVideoMuted() {
       backgroundVideo.muted = true;
       backgroundVideo.volume = 0;
@@ -208,16 +355,16 @@
     }
 
     function unmuteVideo() {
-      backgroundVideo.volume = TARGET_VOLUME;
-      backgroundVideo.muted = false;
-      backgroundVideo.play()
+      backgroundAudio.volume = TARGET_VOLUME;
+      backgroundAudio.muted = false;
+      backgroundAudio.play()
         .then(() => {
-          setStatus("video audio playing on repeat");
+          startAnalyser();
+          setStatus("audio playing on repeat");
           document.removeEventListener("click", unmuteVideo);
         })
         .catch(() => {
-          backgroundVideo.muted = true;
-          setStatus("click anywhere to unmute video");
+          setStatus("click anywhere to unmute audio");
         });
     }
 
@@ -242,9 +389,9 @@
     }
 
     function idleStatus() {
-      return (!backgroundVideo.paused && !backgroundVideo.muted)
-        ? "video audio playing on repeat"
-        : "click anywhere to unmute video";
+      return (!backgroundAudio.paused && !backgroundAudio.muted)
+        ? "audio playing on repeat"
+        : "click anywhere to unmute audio";
     }
 
     copyButton.addEventListener("click", async () => {
