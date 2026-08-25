@@ -360,7 +360,7 @@
       backgroundAudio.play()
         .then(() => {
           startAnalyser();
-          setStatus("audio playing on repeat");
+          setStatus("");
           document.removeEventListener("click", unmuteVideo);
         })
         .catch(() => {
@@ -390,7 +390,7 @@
 
     function idleStatus() {
       return (!backgroundAudio.paused && !backgroundAudio.muted)
-        ? "audio playing on repeat"
+        ? ""
         : "click anywhere to unmute audio";
     }
 
